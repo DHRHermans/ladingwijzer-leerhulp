@@ -31,3 +31,9 @@ Rollen wordt apart als golfprikkel toegevoegd rond de statische scheefstand. De 
 Voorbeelden: gelijk verdeeld, zwaar aan bakboord, zwaar vooraan, scheef én voorover en hoog gestapelde containers. De voorbeeldknoppen wijzigen de invoer van de simulator en zijn verborgen in de puzzel. In de puzzel volgt het schip de geplaatste partijen.
 
 `node tests/effects.cjs` toetst balans, beide hellingsrichtingen, voor-/achtertrim, gecombineerde onbalans en ongeldige invoer. `tests/browser.cjs` controleert de SVG-bewegingen, golfprikkel, pauze, verbergen, scenario’s, voorkeur voor minder beweging en puzzelkoppeling. Hiervoor is Playwright met Chromium nodig; de overige tests hebben alleen Node.js nodig.
+
+### Achteraanzicht en trim
+
+De achtersteven in het achteraanzicht heeft nu dezelfde verticale positie als het bijbehorende punt in het zijaanzicht. De gedeelde illustratieve trimhoek verplaatst de achtersteven met `315 × sin(trimhoek)` ten opzichte van het middendraaipunt. De doorsnede wordt in verticale projectie met `cos(trimhoek)` weergegeven; overhellen en rollen blijven daarbinnen draaien. Bij gelijke totale massa komt de achtersteven dus hoger bij voorovertrim en lager bij achterovertrim. Beide aanzichten gebruiken dezelfde gemiddelde verticale verschuiving. Dit herstelt de geometrische samenhang van de illustratie; het maakt de trimhoek niet tot een scheepsspecifieke hydrostatische berekening.
+
+Gerichte browsercontrole: `node tests/ship-browser.cjs` (Playwright en Chromium). Die vergelijkt de achterstevenprojectie met de zijaanzichtrotatie, test gelijkblijvende totale massa, voor- en achterovertrim, gecombineerde helling, puzzelkoppeling en mobiele breedte.
