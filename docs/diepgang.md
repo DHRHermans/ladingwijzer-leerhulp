@@ -30,3 +30,13 @@ De standaardroute is de leerhub (`#start`), met ingangen voor ADN (`#adn`), diep
 De simulator biedt schuiven voor hoeveelheid, waterdichtheid en waterdiepte, een afspeelbare overgang van zoet naar zee en een bewaarfunctie voor een vergelijkingskiel. De detailweergave vergroot het verschil tegenover zoetwater (8 pixels/cm, visueel begrensd; de cijfers zijn ongewijzigd). Een bewaarde vergelijking leeft alleen in de huidige browsersessie. De grafische laadblokken zijn schematisch en stellen geen tankplan voor.
 
 De scheepsweergave heeft een vaste verticale schaal (60 pixels per modelmeter). Het aanpassen van de waterdiepte verplaatst alleen de bodem, niet het schip. Bij grote waterdiepte ligt de bodem buiten beeld en wordt dit gemeld.
+
+## Eigen meetbrief
+
+Open **Eigen meetbrief toevoegen** in de diepgangmodule. PDF, JPG, PNG en WebP tot 20 MB worden lokaal verwerkt. Kies één PDF-pagina (1–100); tekst-PDF’s gebruiken PDF.js, scans en foto’s Tesseract OCR. De benodigde assets staan in `vendor/` en worden pas bij import geladen. Er is geen externe OCR-dienst of documentupload.
+
+De herkenning levert kandidaatrijen op, geen gevalideerde tabel. Vooral kolommen zoals ton per cm kunnen foutief als inzinking/volume worden herkend. De gebruiker controleert de preview, corrigeert de puntkomma-gescheiden tabel en bevestigt de betekenis van beide kolommen. Onvolledige, dubbele, aflopende en ongeldige rijen worden bij toepassen geweigerd. Alleen totale waterverplaatsing in m³ wordt ondersteund; geen automatische omzetting van laadvermogen. cm en m voor de eerste kolom zijn instelbaar. Tussen de ingevoerde punten blijft de berekening lineair.
+
+Een toegepast document vervangt de tabel in het werkgeheugen, wist de vergelijkingskiel en zet de lading op nul en het water op 1000 kg/m³. De lege toestand wordt binnen het nieuwe tabelbereik gehouden en moet opnieuw worden beoordeeld. Documenten en eigen tabellen worden niet bewaard na herladen. De voorbeeldknoppen herstellen de meegeleverde meetbrief. Het oorspronkelijke document wordt niet aangepast.
+
+Extra tests: `node tests/meetbrief.cjs`.

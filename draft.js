@@ -1,11 +1,11 @@
 (function(){
 'use strict';
-const host=document.getElementById('diepgang'),E=window.DraftLearning;
+const host=document.getElementById('diepgang');let E=window.DraftLearning;
 const fmt=(x,n=2)=>x.toLocaleString('nl-BE',{minimumFractionDigits:n,maximumFractionDigits:n});
 host.innerHTML=`<div class="sim-heading"><div><span class="eyebrow">HET DRIJFVERMOGENLAB</span><h1>Jij verandert het water.<br>Het schip reageert.</h1></div><button data-view="start">← Terug naar de leerhub</button></div>
 <p class="intro">Een schip moet zijn eigen massa én de lading dragen. In dichter water is daarvoor minder verplaatst volume nodig: het schip komt hoger te liggen. Probeer het met de tabel uit jouw meetbrief.</p>
 <details class="sim-assumptions"><summary>Oefenmodel op basis van jouw meetbrief · bekijk de aannames</summary><div class="notice"><b>Oefenmodel, geen beladings- of vaaradvies.</b>De bron noemt <em>gemiddelde inzinking</em>. Het referentievlak voor echte diepgang en de lege scheepsmassa zijn niet vastgesteld. Alleen voor deze simulatie nemen we inzinking gelijk aan diepgang en kiezen we een lege toestand in zoetwater. Trim, slagzij, stabiliteit, squat en toegestane inzinking worden niet berekend.</div></details>
-<div class="draft-layout"><form id="draft-form" class="panel"><span class="eyebrow">BEDIENING</span><h2>Neem het roer over</h2><p id="draft-chosen-product" class="muted">Gebruik een voorbeeld of open deze oefening vanuit een productkaart.</p>
+<div id="meetbrief-import"></div><p id="draft-table-status" class="muted">Actieve meetbrief: meegeleverd voorbeeld · 252 tabelpunten · 1–252 cm.</p><div class="draft-layout"><form id="draft-form" class="panel"><span class="eyebrow">BEDIENING</span><h2>Neem het roer over</h2><p id="draft-chosen-product" class="muted">Gebruik een voorbeeld of open deze oefening vanuit een productkaart.</p>
 <details class="sim-settings"><summary>Lege toestand & product instellen</summary><label>Lege oefentoestand · inzinking (cm)<input id="draft-empty" type="number" min="1" max="252" step="0.1" value="40" required></label><p class="muted">40 cm is een gekozen oefenwaarde, geen vastgesteld gegeven van het schip.</p>
 <label>Voorbeeldlading<select id="draft-product"><option value="840">Dieselolie · 840 kg/m³</option><option value="790">Methanol · 790 kg/m³</option><option value="740">Benzine · 740 kg/m³</option><option value="custom">Eigen product</option></select></label>
 <label>Productdichtheid (kg/m³)<input id="draft-product-density" type="number" min="1" max="3000" step="1" value="840" required></label>
@@ -57,7 +57,7 @@ function update(){
   q('draft-zoom-keel').setAttribute('d',`M25 ${zoom}H250`);q('draft-zoom-label').textContent=`${fmt(r.deltaCm)} cm tegenover zoetwater`;
   for(const key of ['amount','density','depth']){
    const input=q('draft-'+key),slider=q('draft-'+key+'-range');
-   if(key==='amount'){slider.max=Math.ceil(2100*(mode==='volume'?1000/pd:1));q('draft-amount-max').textContent=fmt(+slider.max,0)+(mode==='mass'?' ton':' m³');}
+   if(key==='amount'){slider.max=Math.max(1,Math.floor(Math.max(0,E.volumeAt(E.maxCm)-E.volumeAt(params.emptyCm))*(mode==='volume'?1000/pd:1)));q('draft-amount-max').textContent=fmt(+slider.max,0)+(mode==='mass'?' ton':' m³');}
    slider.value=input.value;
   }
   q('draft-svg-desc').textContent=`Modeldiepgang ${fmt(r.draft)} meter. ${fmt(Math.abs(r.deltaCm))} centimeter ${r.deltaCm<=0?'hoger':'dieper'} dan in zoetwater. Waterdiepte ${fmt(params.depth)} meter.`;
@@ -82,11 +82,22 @@ form.addEventListener('input',e=>{
  update();
 });
 form.addEventListener('click',e=>{const b=e.target.closest('[data-draft-example]');if(!b)return;
- stopPlayback();q('draft-chosen-product').textContent='Oefenvoorbeeld met afgeronde productdichtheid.';const type=b.dataset.draftExample;q('draft-empty').value=40;q('draft-depth').value=3.5;q('draft-product').value='840';q('draft-product-density').value=840;
+ stopPlayback();window.dispatchEvent(new CustomEvent('draft-table',{detail:{points:window.MeetbriefData.points,name:'Meegeleverd oefenvoorbeeld'}}));q('draft-chosen-product').textContent='Oefenvoorbeeld met afgeronde productdichtheid.';const type=b.dataset.draftExample;q('draft-empty').value=40;q('draft-depth').value=3.5;q('draft-product').value='840';q('draft-product-density').value=840;
  q('draft-mode').value=lastMode=type==='volume'?'volume':'mass';q('draft-amount').value=type==='volume'?1000:1500;q('draft-amount-label').textContent=lastMode==='mass'?'Ladingmassa (ton)':'Ladingvolume (m³)';
  q('draft-water').value=q('draft-density').value=type==='sea'?1025:1000;update();
 });
-window.addEventListener('draft-cargo',e=>{
+window.addEventListener('draft-table',e=>{
+ stopPlayback();E=window.DraftLearning.createModel(e.detail.points);snapshot=null;current=null;
+ q('draft-ghost').setAttribute('visibility','hidden');q('draft-snapshot-note').textContent='Nieuwe meetbrief: de eerdere vergelijking is gewist.';
+ q('draft-empty').min=E.minCm;q('draft-empty').max=E.maxCm;q('draft-empty').step='any';
+ q('draft-density').value=q('draft-density-range').value=q('draft-water').value=1000;
+ q('draft-empty').value=Math.max(E.minCm,Math.min(E.maxCm,+q('draft-empty').value||E.minCm));
+ q('draft-amount').value=0;q('draft-mode').value=lastMode='mass';q('draft-amount-label').textContent='Ladingmassa (ton)';
+ form.querySelector('.sim-settings').open=true;
+ q('draft-table-status').textContent='Actieve meetbrief: '+e.detail.name+' · '+e.detail.points.length+' tabelpunten · '+E.minCm+'–'+E.maxCm+' cm. Lege toestand controleren; lading is teruggezet op nul.';
+ update();
+});
+window.addEventListener('draft-cargo' ,e=>{
  stopPlayback();form.querySelector('.sim-settings').open=true;
  const name=String(e.detail.name),un=String(e.detail.un);
  q('draft-chosen-product').textContent='Gekozen product: UN '+un+' — '+name+'. Vul een productdichtheid in; die wordt niet uit ADN-tabelkolom 12 afgeleid.';
