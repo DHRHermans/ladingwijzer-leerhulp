@@ -9,20 +9,22 @@ function project(point,pitch,heel){
 }
 function model(mode,masses,high){
  const faces=[];
- const face=(p,color,stroke='#31576a')=>faces.push({p,color,stroke});
+ const face=(p,color,stroke='#31576a',surface='')=>faces.push({p,color,stroke,surface});
  const box=(x1,x2,y1,y2,top,bottom,color)=>{
   face([[x1,y1,top],[x2,y1,top],[x2,y2,top],[x1,y2,top]],color);
   face([[x1,y2,top],[x2,y2,top],[x2,y2,bottom],[x1,y2,bottom]],color);
+  face([[x1,y1,top],[x2,y1,top],[x2,y1,bottom],[x1,y1,bottom]],color);
   face([[x2,y1,top],[x2,y2,top],[x2,y2,bottom],[x2,y1,bottom]],color);
  };
  const port=[[-355,0,-42],[-310,-118,-73],[315,-118,-73],[340,-95,-22],[315,-92,52],[-310,-92,52]];
  const starboard=port.map(([x,y,z])=>[x,-y,z]);
  face([port[1],port[2],starboard[2],starboard[1]],'#527e91');
- face([port[0],port[1],port[2],port[3],port[4],port[5]],'#285a72');
- face([starboard[0],starboard[1],starboard[2],starboard[3],starboard[4],starboard[5]],'#183c54');
+ face([port[0],port[1],port[2],port[3],port[4],port[5]],'#285a72','#31576a','port-hull');
+ face([starboard[0],starboard[1],starboard[2],starboard[3],starboard[4],starboard[5]],'#183c54','#31576a','starboard-hull');
  face([port[2],starboard[2],starboard[4],port[4]],'#214b64');
  // Same red keel band and deck level in both projections.
  face([[-310,92,30],[323,92,30],[315,92,52],[-310,92,52]],'#9a6350');
+ face([[-310,-92,30],[323,-92,30],[315,-92,52],[-310,-92,52]],'#9a6350');
  face([[315,-92,30],[315,92,30],[315,92,52],[315,-92,52]],'#9a6350');
  for(let i=0;i<6;i++){
   const mass=masses[i];if(mass<=0)continue;
@@ -45,11 +47,15 @@ function render(mode,masses,high,pitch,heel,view){
  // Draw from far to near along each camera's viewing direction.
  const faces=model(mode,masses,high).map((face,index)=>({...face,index}));
  faces.sort((a,b)=>{
-  const axis=view==='side'?1:0;
-  const depth=f=>f.p.reduce((s,p)=>s+p[axis],0)/f.p.length;
+  const depth=f=>{
+   const center=f.p.reduce((sum,p)=>sum.map((v,i)=>v+p[i]),[0,0,0]).map(v=>v/f.p.length);
+   const q=project(center,pitch,heel);
+   // Zijcamera kijkt vanaf bakboord; achtercamera vanaf de achtersteven.
+   return view==='side'?-q.endX:q.sideX;
+  };
   return depth(a)-depth(b)||a.index-b.index;
  });
- return faces.map(f=>`<path d="${f.p.map((p,i)=>{const [x,z]=coord(p);return (i?'L':'M')+x.toFixed(3)+' '+z.toFixed(3);}).join('')}Z" fill="${f.color}" stroke="${f.stroke}" stroke-width="1.2"/>`).join('');
+ return faces.map(f=>`<path data-surface="${f.surface}" d="${f.p.map((p,i)=>{const [x,z]=coord(p);return (i?'L':'M')+x.toFixed(3)+' '+z.toFixed(3);}).join('')}Z" fill="${f.color}" stroke="${f.stroke}" stroke-width="1.2"/>`).join('');
 }
 const api={G,project,render};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ShipGeometry=api;
 })(globalThis);

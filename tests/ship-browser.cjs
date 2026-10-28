@@ -26,6 +26,14 @@ const root=path.resolve(__dirname,'..');
   const screenY=view=>{const e=document.getElementById('effects-'+view+'-stern-deck-center');return new DOMPoint(+e.getAttribute('cx'),+e.getAttribute('cy')).matrixTransform(e.getScreenCTM()).y;};
   return Math.abs(screenY('side')-screenY('end'));
  });assert.ok(aligned<.5,'Desktop view scales differ: '+aligned);
+ await page.locator('[data-load-case="port"]').click();const portHeel=await equalHeights();
+ assert.ok(portHeel['deck-port'].side>portHeel['deck-starboard'].side);assert.ok(portHeel['deck-port'].end>portHeel['deck-starboard'].end);
+ for(const view of ['side','end'])assert.match(await page.locator('#effects-'+view+'-heel-direction').textContent(),/Bakboord/);
+ const nearSide=await page.evaluate(()=>{const paths=Array.from(document.querySelectorAll('#effects-side-ship [data-surface]'));return paths.findIndex(e=>e.dataset.surface==='port-hull')>paths.findIndex(e=>e.dataset.surface==='starboard-hull');});assert.equal(nearSide,true);
+ await page.locator('#ship-effects').screenshot({path:'/tmp/bakboord-beide-aanzichten.png'});
+ for(const [i,value] of [20,20,20,180,180,180].entries())await page.locator('#cargo-slot-'+i).fill(String(value));const starboardHeel=await equalHeights();
+ assert.ok(starboardHeel['deck-starboard'].side>starboardHeel['deck-port'].side);assert.ok(starboardHeel['deck-starboard'].end>starboardHeel['deck-port'].end);
+ for(const view of ['side','end'])assert.match(await page.locator('#effects-'+view+'-heel-direction').textContent(),/Stuurboord/);
  // Also test an extreme asymmetric load, including submerged deck corners.
  await page.locator('#cargo-type').selectOption('solid');
  for(const [i,value] of [0,0,200,0,0,0].entries())await page.locator('#cargo-slot-'+i).fill(String(value));

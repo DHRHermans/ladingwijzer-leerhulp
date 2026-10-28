@@ -41,3 +41,9 @@ Zijaanzicht: lengte versus hoogte. Achteraanzicht: breedte versus hoogte. Oranje
 De lichaamsgeometrie is daarmee consistent, maar trim- en hellingshoeken blijven illustratief: scheepsspecifieke hydrostatica en stabiliteitsgegevens ontbreken.
 
 Tests: `node tests/geometry.cjs` en `node tests/ship-browser.cjs` (Playwright en Chromium). De browsertest vergelijkt werkelijk gerenderde dek- en kielpunten in de twee SVG-ruimtes voor alle voorbeeldscenario’s, een ondergedompelde dekhoek, rollen, puzzelbelading en mobiel. Een laadversie op de script- en stylesheet-URLs voorkomt oude en nieuwe geometrie door elkaar.
+
+### Bakboord en stuurboord herkennen
+
+Het zijaanzicht kijkt expliciet vanaf bakboord. De bakboordromp ligt dus vooraan; de achterliggende stuurboordzijde mag deze niet onterecht afdekken. De tekenvolgorde gebruikt de diepte na de gecombineerde rol-/trimrotatie, niet alleen de oorspronkelijke coördinaten. Ook laadblokken hebben nu beide zijvlakken.
+
+Een doorgetrokken oranje deklijn is bakboord; de groene, in zijaanzicht gestippelde lijn is stuurboord. Beide aanzichten noemen welke zijde lager ligt. Bij bakboordhelling ligt de oranje lijn lager in beide beelden en bij stuurboordhelling de groene. Rollen verandert deze hoogtes gezamenlijk via de gedeelde projectie. De geometrie- en browsertests controleren beide richtingen, zichtzijde en bijbehorende dekpunten.
