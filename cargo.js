@@ -6,14 +6,15 @@ const work=document.createElement('div');work.innerHTML=`<div class="cargo-tabs"
 const lessons=host.querySelector('.cargo-lessons');host.insertBefore(work,lessons);const q=id=>document.getElementById(id),form=q('cargo-form');
 function render(){
  const mode=q('cargo-type').value,density=+q('cargo-density').value;
- if(!form.checkValidity()){q('cargo-metrics').textContent='Vul alle hoeveelheden en een positieve dichtheid / containermassa in.';q('cargo-plan').replaceChildren();q('cargo-balance-dot').hidden=true;return;}
+ if(!form.checkValidity()){window.dispatchEvent(new CustomEvent('cargo-load',{detail:{source:'sim',valid:false}}));q('cargo-metrics').textContent='Vul alle hoeveelheden en een positieve dichtheid / containermassa in.';q('cargo-plan').replaceChildren();q('cargo-balance-dot').hidden=true;return;}
  try{
  const r=E.calculate(mode,Array.from({length:6},(_,i)=>+q('cargo-slot-'+i).value),density);
+ window.dispatchEvent(new CustomEvent('cargo-load',{detail:{source:'sim',mode,masses:r.slots.map(s=>s.mass),partial:r.partial,valid:true}}));
  q('cargo-type-hint').textContent=E.modes[mode].hint;
  q('cargo-plan').innerHTML=r.slots.map((s,i)=>`<div class="cargo-module ${s.over?'cargo-over':''}"><div class="cargo-fill" style="height:${Math.min(100,(mode==='containers'?s.amount/10:s.volume/300)*100)}%"></div><span>${names[i]}</span><strong>${f(s.mass,1)} ton</strong><small>${mode==='containers'?f(s.amount)+' TEU':f(s.volume,1)+' / 300 m³'}</small><em>${s.over?'Capaciteit overschreden':s.partial?'Gedeeltelijk gevulde tank':'200 ton maximaal'}</em></div>`).join('');
  q('cargo-metrics').innerHTML=`<div class="draft-facts"><div><small>Ladingmassa</small><strong>${f(r.total,1)} ton</strong></div><div><small>${mode==='containers'?'Benaderde containerruimte':'Laadvolume'}</small><strong>${f(r.volume,1)} m³</strong></div><div><small>Bakboord / stuurboord</small><strong>${f(r.sides[0],1)} / ${f(r.sides[1],1)} ton</strong></div><div><small>Voor / achter (midden apart)</small><strong>${f(r.ends[0],1)} / ${f(r.ends[1],1)} ton</strong></div></div><p class="notice"><b>${r.over?'Een of meer modules zijn te zwaar of te vol.':'Verdeling berekend.'}</b>${mode==='liquid'?r.partial+' gedeeltelijk gevulde tanks: bespreek het effect van vrije vloeistofoppervlakken.':'Beoordeel naast hoeveelheid ook plaatsing, vastzetten en scheepseisen.'}</p>`;
  q('cargo-balance-dot').hidden=false;q('cargo-balance-dot').style.left=(50+r.x*38)+'%';q('cargo-balance-dot').style.top=(50+r.y*34)+'%';
- }catch(e){q('cargo-metrics').textContent=e.message;q('cargo-plan').replaceChildren();q('cargo-balance-dot').hidden=true;}
+ }catch(e){window.dispatchEvent(new CustomEvent('cargo-load',{detail:{source:'sim',valid:false}}));q('cargo-metrics').textContent=e.message;q('cargo-plan').replaceChildren();q('cargo-balance-dot').hidden=true;}
 }
 form.addEventListener('submit',e=>e.preventDefault());form.addEventListener('input',e=>{
  if(e.target.id==='cargo-type'){
@@ -32,6 +33,7 @@ q('cargo-distribute').onclick=()=>{
 let task=E.puzzle(),assignments=task.masses.map(()=>-1),selected=null;
 function puzzleRender(){
  const r=E.gradePuzzle(task,assignments);
+ window.dispatchEvent(new CustomEvent('cargo-load',{detail:{source:'puzzle',mode:task.mode,masses:r.mass,partial:task.mode==='liquid'?r.mass.filter(m=>m>0&&m*1000/task.density<300).length:0,valid:true}}));
  q('puzzle-instructions').textContent=`Plaats ${task.masses.length} ${task.mode==='containers'?'containers':'partijen'} (${f(task.masses.reduce((a,b)=>a+b,0))} ton). Maximaal ${task.capacity} ton${task.mode==='containers'?' en 4 TEU':' en 300 m³'} per module. Verschil bakboord/stuurboord én voor/achter: maximaal ${task.tolerance} ton. De middenmodules tellen niet mee als voor of achter.`;
  q('puzzle-pieces').innerHTML=task.masses.map((m,i)=>`<div class="puzzle-piece ${selected===i?'piece-selected':''}" draggable="true" data-piece="${i}"><button data-select-piece="${i}" type="button" aria-pressed="${selected===i}">${task.mode==='containers'?'Container':'Partij'} ${i+1} · ${m} ton</button><label class="sr-only" for="puzzle-location-${i}">Plaats van partij ${i+1}</label><select id="puzzle-location-${i}" data-location="${i}"><option value="-1">Op de kade</option>${names.map((n,slot)=>`<option value="${slot}" ${assignments[i]===slot?'selected':''}>${n}</option>`).join('')}</select></div>`).join('');
  q('puzzle-plan').innerHTML=names.map((name,i)=>`<button class="cargo-module ${r.mass[i]>task.capacity?'cargo-over':''}" data-drop-slot="${i}" type="button"><span>${name}</span><strong>${f(r.mass[i])} / ${task.capacity} ton</strong><small>${assignments.map((s,j)=>s===i?(task.mode==='containers'?'C':'P')+(j+1):null).filter(Boolean).join(' · ')||'Leeg'}</small><em>${task.mode==='containers'?r.count[i]+' / 4 TEU':f(r.mass[i]*1000/task.density,1)+' / 300 m³'}</em></button>`).join('');
@@ -47,6 +49,6 @@ q('puzzle-pieces').addEventListener('dragstart',e=>{const p=e.target.closest('[d
 q('puzzle-plan').addEventListener('dragover',e=>{if(e.target.closest('[data-drop-slot]'))e.preventDefault();});
 q('puzzle-plan').addEventListener('drop',e=>{const b=e.target.closest('[data-drop-slot]');if(b){e.preventDefault();if(selected!==null)move(selected,+b.dataset.dropSlot);}});
 q('puzzle-plan').addEventListener('click',e=>{const b=e.target.closest('[data-drop-slot]');if(b){if(selected!==null)move(selected,+b.dataset.dropSlot);else q('puzzle-feedback').textContent='Kies eerst een partij op de kade of wijzig het keuzelijstje bij een partij.';}});
-for(const tab of ['sim','puzzle'])q('cargo-tab-'+tab).onclick=()=>{q('cargo-sim').hidden=tab!=='sim';q('cargo-puzzle').hidden=tab!=='puzzle';q('cargo-tab-sim').setAttribute('aria-pressed',String(tab==='sim'));q('cargo-tab-puzzle').setAttribute('aria-pressed',String(tab==='puzzle'));};
+for(const tab of ['sim','puzzle'])q('cargo-tab-'+tab).onclick=()=>{q('cargo-sim').hidden=tab!=='sim';q('cargo-puzzle').hidden=tab!=='puzzle';q('cargo-tab-sim').setAttribute('aria-pressed',String(tab==='sim'));q('cargo-tab-puzzle').setAttribute('aria-pressed',String(tab==='puzzle'));if(tab==='sim')render();else puzzleRender();};
 render();puzzleRender();
 })();

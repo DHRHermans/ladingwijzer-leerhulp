@@ -19,3 +19,15 @@ Bediening: een partij aanklikken en daarna een module kiezen, slepen of het toeg
 `node tests/cargo.cjs` controleert massa/volume, capaciteit, containereenheden, gedeeltelijk gevulde tanks, massamiddelpunt en een bekende oplossing voor elk van de drie opdrachten. De oplossingstoewijzing per partij is `[0,3,0,3,2,5,2,5]`.
 
 De browsercontrole omvat ook PDF-import, lokale foto-OCR, correctie en activering van een eigen meettabel, de drie hubroutes, overbelasting, gelijk verdelen en de puzzels op mobiel. De bestaande product- en dossiertests blijven beschikbaar in `tests/`.
+
+## Het schip zien bewegen
+
+Het extra vak **Zie het gevolg van je laadplan** toont een zijaanzicht en een achteraanzicht van een binnenschip. Het is met een checkbox te verbergen; de bestaande simulator en puzzel blijven eronder beschikbaar. Beide werkvormen sturen hun actuele ladingmassa’s naar de weergave via `cargo-load`-events. Bij ongeldige invoer wordt de scheepsweergave verborgen.
+
+`cargo-effects.js` bepaalt uitsluitend richting en visuele versterking uit de relatieve massaverdeling. Meer massa aan bakboord of stuurboord geeft een illustratieve helling naar die kant; meer massa voor of achter laat die kant in het zijaanzicht dieper liggen. De hoeken zijn bewust onbenoemd en vormen geen berekende werkelijke helling of trim. De lege scheepsmassa, ballast, scheepsvorm, GM, GZ, lengtetrimstijfheid en vloeistofmomenten zijn onbekend. De beperkte verticale verschuiving bij meer massa is eveneens alleen grafisch, zonder relatie met de meetbriefsimulator.
+
+Rollen wordt apart als golfprikkel toegevoegd rond de statische scheefstand. De amplitude, periode en versterkingsfactoren voor hoog geplaatste lading en gedeeltelijk gevulde vloeistofmodules zijn illustratief gekozen. Dit model voorspelt geen stabiliteit, rolperiode, kapseizen of veiligheid. Bij uitgeschakelde golfprikkel blijft alleen de statische illustratie staan. De animatie kan worden gepauzeerd, stopt buiten de zichtbare module en respecteert een voorkeur voor minder beweging.
+
+Voorbeelden: gelijk verdeeld, zwaar aan bakboord, zwaar vooraan, scheef én voorover en hoog gestapelde containers. De voorbeeldknoppen wijzigen de invoer van de simulator en zijn verborgen in de puzzel. In de puzzel volgt het schip de geplaatste partijen.
+
+`node tests/effects.cjs` toetst balans, beide hellingsrichtingen, voor-/achtertrim, gecombineerde onbalans en ongeldige invoer. `tests/browser.cjs` controleert de SVG-bewegingen, golfprikkel, pauze, verbergen, scenario’s, voorkeur voor minder beweging en puzzelkoppeling. Hiervoor is Playwright met Chromium nodig; de overige tests hebben alleen Node.js nodig.

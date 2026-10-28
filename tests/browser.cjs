@@ -67,5 +67,21 @@ const root=path.resolve(__dirname,'..');
  for(const mode of ['bulk','liquid','containers']){await page.locator('#puzzle-mode').selectOption(mode);for(const [i,slot] of [0,3,0,3,2,5,2,5].entries())await page.locator('#puzzle-location-'+i).selectOption(String(slot));assert.match(await page.locator('#puzzle-feedback').innerText(),/Opdracht opgelost/);}
  await page.screenshot({path:'/tmp/ladingspuzzel.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);
  console.log('Cargo modes, overload feedback, redistribution, containers and all three puzzle solutions passed.');
+
+ await page.locator('#cargo-tab-sim').click();await page.locator('#cargo-type').selectOption('solid');
+ await page.locator('#effects-waves').uncheck();await page.locator('[data-load-case="port"]').click();
+ assert.match(await page.locator('#effects-feedback').innerText(),/naar bakboord/);assert.match(await page.locator('#effects-end-ship').getAttribute('transform'),/rotate\(-/);assert.equal(await page.locator('#effects-side-ship').getAttribute('transform'),'rotate(0)');
+ await page.locator('[data-load-case="front"]').click();assert.match(await page.locator('#effects-feedback').innerText(),/voorschip/);assert.match(await page.locator('#effects-side-ship').getAttribute('transform'),/rotate\(-/);assert.equal(await page.locator('#effects-end-ship').getAttribute('transform'),'rotate(0)');
+ await page.locator('[data-load-case="diagonal"]').click();assert.match(await page.locator('#effects-end-ship').getAttribute('transform'),/rotate\(-/);assert.match(await page.locator('#effects-side-ship').getAttribute('transform'),/rotate\(-/);
+ await page.locator('[data-load-case="balanced"]').click();assert.equal(await page.locator('#effects-end-ship').getAttribute('transform'),'rotate(0)');assert.equal(await page.locator('#effects-side-ship').getAttribute('transform'),'rotate(0)');
+ await page.locator('#effects-waves').check();const pose=await page.locator('#effects-end-ship').getAttribute('transform');await page.waitForTimeout(250);assert.notEqual(await page.locator('#effects-end-ship').getAttribute('transform'),pose);
+ await page.locator('#effects-pause').click();const pausedPose=await page.locator('#effects-end-ship').getAttribute('transform');await page.waitForTimeout(180);assert.equal(await page.locator('#effects-end-ship').getAttribute('transform'),pausedPose);
+ await page.locator('#effects-visible').uncheck();assert.equal(await page.locator('#effects-content').isVisible(),false);assert.equal(await page.locator('#cargo-plan').isVisible(),true);await page.locator('#effects-visible').check();
+ await page.locator('[data-load-case="high"]').click();assert.equal(await page.locator('#cargo-type').inputValue(),'containers');assert.equal(await page.locator('#effects-high').isChecked(),true);
+ await page.setViewportSize({width:1365,height:950});await page.locator('#ship-effects').screenshot({path:'/tmp/scheepsgevolgen-desktop.png'});
+ await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>document.getElementById('effects-motion-note').textContent.includes('minder animatie'));assert.match(await page.locator('#effects-motion-note').innerText(),/minder animatie/);
+ await page.locator('#cargo-tab-puzzle').click();assert.match(await page.locator('#effects-source').innerText(),/puzzel/);assert.equal(await page.locator('#effects-scenarios').isVisible(),false);
+ await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.locator('#ship-effects').screenshot({path:'/tmp/scheepsgevolgen-mobile.png'});
+ assert.deepEqual(errors,[]);console.log('Ship views: heel direction, fore/aft trim, combined imbalance, balanced state, rolling, pause, visibility, container scenario, reduced motion and puzzle coupling passed.');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1)});
