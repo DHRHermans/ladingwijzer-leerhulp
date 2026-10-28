@@ -40,3 +40,11 @@ De herkenning levert kandidaatrijen op, geen gevalideerde tabel. Vooral kolommen
 Een toegepast document vervangt de tabel in het werkgeheugen, wist de vergelijkingskiel en zet de lading op nul en het water op 1000 kg/m³. De lege toestand wordt binnen het nieuwe tabelbereik gehouden en moet opnieuw worden beoordeeld. Documenten en eigen tabellen worden niet bewaard na herladen. De voorbeeldknoppen herstellen de meegeleverde meetbrief. Het oorspronkelijke document wordt niet aangepast.
 
 Extra tests: `node tests/meetbrief.cjs`.
+
+## Blanco meetbrief downloaden en invullen
+
+In de diepgangmodule staat een downloadlink naar `docs/blanco-meetbrief.csv`. Dit is een UTF-8 CSV-bestand met BOM, twee vaste kolomkoppen en 30 lege invulrijen. Het open bestandsformaat kan zonder betaalde software worden ingevuld in LibreOffice Calc, maar ook in Excel of een teksteditor. Het sjabloon is een oefentabel, geen officiële scheepsmeetbrief.
+
+Kolommen: `inzinking_cm` en `waterverplaatsing_m3`. Vul minstens twee meetpunten met totale waterverplaatsing in, geen laadvermogen of ton per cm. Gebruik een punt of komma voor decimalen. Bewaar als UTF-8 CSV met puntkomma’s en behoud de kolomkoppen. Extra rijen mogen worden toegevoegd. Helemaal lege rijen worden overgeslagen, gedeeltelijk ingevulde rijen worden geweigerd. Cellen tussen dubbele aanhalingstekens worden ondersteund voor spreadsheetexports.
+
+De ingevulde CSV kan via Eigen meetbrief toevoegen worden geopend. De controle- en bevestigingsstap en de gewone tabelvalidatie blijven gelden. De CSV-route heeft geen OCR nodig en verwerkt het bestand lokaal. De gebruiker moet zelf weten wat het referentievlak en de lege toestand zijn.

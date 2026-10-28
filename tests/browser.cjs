@@ -83,5 +83,13 @@ const root=path.resolve(__dirname,'..');
  await page.locator('#cargo-tab-puzzle').click();assert.match(await page.locator('#effects-source').innerText(),/puzzel/);assert.equal(await page.locator('#effects-scenarios').isVisible(),false);
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.locator('#ship-effects').screenshot({path:'/tmp/scheepsgevolgen-mobile.png'});
  assert.deepEqual(errors,[]);console.log('Ship views: heel direction, fore/aft trim, combined imbalance, balanced state, rolling, pause, visibility, container scenario, reduced motion and puzzle coupling passed.');
+
+ await page.locator('nav [data-view="diepgang"]').click();
+ const [csvDownload]=await Promise.all([page.waitForEvent('download'),page.locator('#meetbrief-template-download').click()]);assert.equal(csvDownload.suggestedFilename(),'blanco-meetbrief.csv');
+ const template=fs.readFileSync(await csvDownload.path(),'utf8');assert.match(template,/inzinking_cm;waterverplaatsing_m3/);assert.ok(template.split('\n').slice(1).every(row=>!row.trim()||row===';'));
+ await page.locator('#meetbrief-file').setInputFiles({name:'ingevulde-meetbrief.csv',mimeType:'text/csv',buffer:Buffer.from('\ufeffinzinking_cm;waterverplaatsing_m3\n40;382,286\n;\n100;971,602\n200;1991,449\n')});
+ await page.locator('#meetbrief-read').click();await page.locator('#meetbrief-review').waitFor({state:'visible'});assert.equal(await page.locator('#meetbrief-preview').isVisible(),false);assert.match(await page.locator('#meetbrief-review-note').innerText(),/3 ingevulde rijen/);
+ await page.locator('#meetbrief-confirm').check();await page.locator('#meetbrief-apply').click();assert.match(await page.locator('#draft-table-status').innerText(),/ingevulde-meetbrief.csv/);
+ assert.equal(await page.locator('#draft-empty').getAttribute('max'),'200');assert.deepEqual(errors,[]);console.log('Blank template download, CSV import, blank row handling, review and simulation activation passed.');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1)});

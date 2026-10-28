@@ -31,5 +31,20 @@ function parseEdited(text,unit='cm'){
  if(points.length<2)throw new Error('Voeg minstens twee gecontroleerde tabelpunten toe.');
  return points;
 }
-const api={number,candidates,parseEdited};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MeetbriefParser=api;
+function parseCsv(text){
+ const lines=String(text).replace(/^\uFEFF/,'').split(/\r?\n/);
+ function cells(line){return line.split(';').map(cell=>{cell=cell.trim();if(cell.startsWith('"')&&cell.endsWith('"'))cell=cell.slice(1,-1).replaceAll('""','"');if(cell.includes('"'))throw new Error('Ongeldige aanhalingstekens in het CSV-bestand.');return cell;});}
+ const header=cells(lines.shift()||'');
+ if(header.length!==2||header[0]!=='inzinking_cm'||header[1]!=='waterverplaatsing_m3')throw new Error('Gebruik het blanco CSV-sjabloon met kolommen inzinking_cm;waterverplaatsing_m3.');
+ const filled=[];
+ for(const [i,line] of lines.entries()){
+  if(!line.trim())continue;const row=cells(line);
+  if(row.length!==2)throw new Error(`CSV-rij ${i+2}: twee kolommen nodig, gescheiden door een puntkomma.`);
+  if(row.every(v=>!v))continue;
+  if(row.some(v=>!v))throw new Error(`CSV-rij ${i+2}: vul beide waarden in of laat de hele rij leeg.`);
+  filled.push(row.join(';'));
+ }
+ const table=filled.join('\n');parseEdited(table,'cm');return table;
+}
+const api={number,candidates,parseEdited,parseCsv};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.MeetbriefParser=api;
 })(globalThis);
