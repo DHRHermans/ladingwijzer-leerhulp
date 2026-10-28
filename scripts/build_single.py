@@ -14,4 +14,5 @@ for f in files:
  blocks.append('<script>'+code+'</script>')
 s=s.replace('</body>','\n'.join(blocks)+'</body>')
 (root/'LadingWijzer.html').write_text(s)
+(root/'index.html').write_text(s)
 print('Built LadingWijzer.html:',len(s.encode()),'bytes;',len(files),'scripts')

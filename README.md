@@ -100,6 +100,10 @@ Voor herbouw van de zoekdata plaats je de originele PDF als `adn-bron.pdf` naast
 
 ## Publicatie vanuit deze repository
 
-De website staat in `dist/`, inclusief het gekozen logo: een binnenvaartschip boven een open boek. De workflow `.github/workflows/pages.yml` test en publiceert deze map bij een push naar `main`. Kies in GitHub onder Settings → Pages → Source voor **GitHub Actions**.
+De website wordt rechtstreeks vanaf de branch gepubliceerd. Kies in GitHub **Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /(root) → Save**.
 
-Lokaal starten: `python3 -m http.server 8000 --directory dist`. Tests: `npm test` (Node.js 24; geen npm-dependencies nodig). De zelfstandige offlineversie herbouw je met `python3 scripts/build_single.py`; het logo wordt daarin ingebed.
+`index.html` in de hoofdmap bevat de volledige app, inclusief scripts, stijlen, zoekgegevens en het gekozen logo (een binnenvaartschip boven een open boek). `.nojekyll` schakelt Jekyll-verwerking uit. Er is geen eigen publicatieworkflow nodig.
+
+De bewerkbare bestanden staan in `dist/`. Voer na wijzigingen `python3 scripts/build_single.py` uit en commit de bijgewerkte `index.html` mee. Dit maakt ook de zelfstandige offlineversie `LadingWijzer.html` (genegeerd door Git).
+
+Lokaal starten: `python3 -m http.server 8000`. Tests: `npm test` (Node.js 24; geen npm-dependencies nodig).
