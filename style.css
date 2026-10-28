@@ -34,3 +34,7 @@ body[data-active-view=start] main{max-width:1120px;min-height:100svh;display:fle
 .meetbrief-template{display:flex;gap:22px;align-items:center;justify-content:space-between;padding:20px;background:#eaf3f6;border:1px solid #c9dfe7;border-radius:10px;margin-top:22px}.meetbrief-template p{font-size:12px;max-width:70ch;margin-bottom:0}.meetbrief-template .file-button{display:inline-block;text-decoration:none;background:#fff;font-size:12px;flex-shrink:0}@media(max-width:700px){.meetbrief-template{flex-direction:column;align-items:flex-start}}
 
 #effects-end-heave{transition:transform .45s ease-out}@media(prefers-reduced-motion:reduce){#effects-end-heave{transition:none}}
+
+#effects-side-ship,#effects-end-heave{transition:none}
+
+@media(min-width:901px){.effects-scenes{grid-template-columns:900fr 520fr}}

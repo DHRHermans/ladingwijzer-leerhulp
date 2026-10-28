@@ -32,8 +32,12 @@ Voorbeelden: gelijk verdeeld, zwaar aan bakboord, zwaar vooraan, scheef én voor
 
 `node tests/effects.cjs` toetst balans, beide hellingsrichtingen, voor-/achtertrim, gecombineerde onbalans en ongeldige invoer. `tests/browser.cjs` controleert de SVG-bewegingen, golfprikkel, pauze, verbergen, scenario’s, voorkeur voor minder beweging en puzzelkoppeling. Hiervoor is Playwright met Chromium nodig; de overige tests hebben alleen Node.js nodig.
 
-### Achteraanzicht en trim
+### Eén scheepsvorm voor beide aanzichten
 
-De achtersteven in het achteraanzicht heeft nu dezelfde verticale positie als het bijbehorende punt in het zijaanzicht. De gedeelde illustratieve trimhoek verplaatst de achtersteven met `315 × sin(trimhoek)` ten opzichte van het middendraaipunt. De doorsnede wordt in verticale projectie met `cos(trimhoek)` weergegeven; overhellen en rollen blijven daarbinnen draaien. Bij gelijke totale massa komt de achtersteven dus hoger bij voorovertrim en lager bij achterovertrim. Beide aanzichten gebruiken dezelfde gemiddelde verticale verschuiving. Dit herstelt de geometrische samenhang van de illustratie; het maakt de trimhoek niet tot een scheepsspecifieke hydrostatische berekening.
+`ship-geometry.js` bevat de gedeelde driedimensionale oefenromp, opbouw en lading. Het dek ligt op z = −73 en de kiel op z = 52. De vorige twee tekeningen hadden verschillende dek- en kielhoogtes; die onafhankelijke scheepsvormen worden niet meer gebruikt. Beide beelden projecteren dezelfde vertices na één gecombineerde rol-/hellings- en trimrotatie en dezelfde gemiddelde verticale verplaatsing.
 
-Gerichte browsercontrole: `node tests/ship-browser.cjs` (Playwright en Chromium). Die vergelijkt de achterstevenprojectie met de zijaanzichtrotatie, test gelijkblijvende totale massa, voor- en achterovertrim, gecombineerde helling, puzzelkoppeling en mobiele breedte.
+Zijaanzicht: lengte versus hoogte. Achteraanzicht: breedte versus hoogte. Oranje en groene punten markeren dezelfde dekhoeken achteraan (bakboord en stuurboord). Hun hoogte en positie ten opzichte van de horizontale waterlijn zijn in beide projecties identiek, ook als een dekhoek onder water komt. Op desktop gebruiken de aanzichten dezelfde pixelschaal; beide waterlijnen zijn vlak. Bij overhellen kunnen de lage en hoge dekzijde verschillend zichtbaar zijn, maar de gekleurde punten blijven rechtstreeks vergelijkbaar. Afzonderlijke CSS-overgangen zijn verwijderd zodat de beelden niet tijdelijk van elkaar afwijken. Eén animatiestap werkt beide projecties bij, met circa 30 frames per seconde en zonder achtergrondanimatie buiten de module.
+
+De lichaamsgeometrie is daarmee consistent, maar trim- en hellingshoeken blijven illustratief: scheepsspecifieke hydrostatica en stabiliteitsgegevens ontbreken.
+
+Tests: `node tests/geometry.cjs` en `node tests/ship-browser.cjs` (Playwright en Chromium). De browsertest vergelijkt werkelijk gerenderde dek- en kielpunten in de twee SVG-ruimtes voor alle voorbeeldscenario’s, een ondergedompelde dekhoek, rollen, puzzelbelading en mobiel. Een laadversie op de script- en stylesheet-URLs voorkomt oude en nieuwe geometrie door elkaar.

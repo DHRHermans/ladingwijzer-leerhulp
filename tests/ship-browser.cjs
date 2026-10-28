@@ -10,21 +10,30 @@ const root=path.resolve(__dirname,'..');
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('http://127.0.0.1:'+server.address().port+'/#ladingstechniek');
  await page.locator('#effects-waves').uncheck();
- const projection=()=>page.evaluate(()=>{
-  const side=document.getElementById('effects-side-heave').transform.baseVal.consolidate().matrix;
-  const end=document.getElementById('effects-end-heave').transform.baseVal.consolidate().matrix;
-  const pitch=Number(document.getElementById('effects-side-ship').getAttribute('transform').match(/rotate\(([-\d.]+)/)[1]);
-  return {midY:side.f,endY:end.f,endScale:end.d,pitch};
+ const compare=()=>page.evaluate(()=>{
+  const worldY=(view,key)=>{
+   const marker=document.getElementById('effects-'+view+'-stern-'+key),svg=document.getElementById('effects-'+view+'-svg');
+   return new DOMPoint(+marker.getAttribute('cx'),+marker.getAttribute('cy')).matrixTransform(marker.getScreenCTM()).matrixTransform(svg.getScreenCTM().inverse()).y;
+  };
+  return Object.fromEntries(['deck-port','deck-center','deck-starboard','keel'].map(key=>[key,{side:worldY('side',key),end:worldY('end',key)}]));
  });
- await page.locator('[data-load-case="balanced"]').click();const balanced=await projection();assert.equal(balanced.endY,balanced.midY);
- await page.locator('[data-load-case="front"]').click();const front=await projection();assert.ok(front.pitch<0);assert.ok(front.endY<balanced.endY);assert.equal(front.midY,balanced.midY);assert.ok(front.endScale<1);
- assert.ok(Math.abs(front.endY-(front.midY+315*Math.sin(front.pitch*Math.PI/180)))<.001);assert.match(await page.locator('#effects-end-trim-label').textContent(),/hoger/);
- await page.locator('[data-load-case="aft"]').click();const aft=await projection();assert.ok(aft.pitch>0);assert.ok(aft.endY>balanced.endY);assert.equal(aft.midY,balanced.midY);assert.match(await page.locator('#effects-end-trim-label').textContent(),/lager/);
- await page.locator('[data-load-case="diagonal"]').click();const mixed=await projection();assert.ok(mixed.endY<mixed.midY);assert.match(await page.locator('#effects-end-ship').getAttribute('transform'),/rotate\(-/);
- await page.locator('[data-load-case="port"]').click();const port=await projection();assert.equal(port.endY,port.midY);
- await page.locator('[data-load-case="front"]').click();await page.locator('#ship-effects').screenshot({path:'/tmp/trim-gekoppeld.png'});
- await page.locator('#cargo-tab-puzzle').click();await page.locator('#puzzle-mode').selectOption('bulk');await page.locator('#puzzle-location-0').selectOption('0');const puzzle=await projection();assert.ok(puzzle.endY<puzzle.midY);assert.match(await page.locator('#effects-source').innerText(),/puzzel/);
- await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
- assert.deepEqual(errors,[]);console.log('Browser: stern rises for forward loading, sinks for aft loading, matches side-view trim, combines with heel and follows puzzle loading; mobile passed.');
+ const equalHeights=async()=>{const points=await compare();for(const [key,p] of Object.entries(points)){assert.ok(Math.abs(p.side-p.end)<.002,key+': '+JSON.stringify(p));assert.equal(p.side>220,p.end>220,key+' waterline mismatch');}return points;};
+ for(const scenario of ['balanced','front','aft','port','diagonal','high']){
+  await page.locator('[data-load-case="'+scenario+'"]').click();await equalHeights();
+ }
+ // At desktop width the views also have the same pixel scale and waterline.
+ const aligned=await page.evaluate(()=>{
+  const screenY=view=>{const e=document.getElementById('effects-'+view+'-stern-deck-center');return new DOMPoint(+e.getAttribute('cx'),+e.getAttribute('cy')).matrixTransform(e.getScreenCTM()).y;};
+  return Math.abs(screenY('side')-screenY('end'));
+ });assert.ok(aligned<.5,'Desktop view scales differ: '+aligned);
+ // Also test an extreme asymmetric load, including submerged deck corners.
+ await page.locator('#cargo-type').selectOption('solid');
+ for(const [i,value] of [0,0,200,0,0,0].entries())await page.locator('#cargo-slot-'+i).fill(String(value));
+ await equalHeights();await page.locator('#ship-effects').screenshot({path:'/tmp/gedeelde-scheepsvorm.png'});
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('#effects-waves').check();
+ for(let i=0;i<4;i++){await page.waitForTimeout(90);await equalHeights();}
+ await page.locator('#cargo-tab-puzzle').click();await page.locator('#puzzle-mode').selectOption('bulk');await page.locator('#puzzle-location-0').selectOption('0');await equalHeights();
+ await page.setViewportSize({width:390,height:844});await equalHeights();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ assert.deepEqual(errors,[]);console.log('Rendered deck and keel heights match in both views for all scenarios, submerged corners, live rolling, puzzles and mobile.');
  await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1)});
