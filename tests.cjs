@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict');const A=require('./dist/engine.js');
+const full=Object.fromEntries(Object.keys(A.fields).map(k=>[k,'ingevuld']));Object.assign(full,{eni:'12345678',un:'1203',mode:'tank',type:'N',date:'2026-11-10',expiry:'2027-11-10',quantity:'100',unit:'t'});
+const all=Object.fromEntries(A.checks.map(c=>[c.id,'ok']));
+assert.equal(A.assess({},{}).permission,'NIET BEOORDEELD');assert.ok(A.assess({},{}).missing.length>10);
+assert.equal(A.assess(full,all).missing.length,0);assert.equal(A.assess(full,all).permission,'NIET BEOORDEELD');assert.match(A.assess(full,all).title,/beoordeling nodig/);
+assert.ok(A.assess({...full,expiry:'2026-10-01'},all).blockers.some(s=>s.includes('verloopt')));
+assert.ok(A.assess({...full,type:'dry'},all).blockers.length);assert.ok(A.assess(full,{...all,certificate:'no'}).blockers.length);
+assert.ok(A.assess({...full,un:'123',eni:'bad',quantity:'-3'},all).missing.length>=3);
+assert.ok(A.assess({...full,date:'2026-02-30'},all).missing.some(s=>s.includes('datum')));
+assert.equal(A.applicable({mode:'dry'}).some(c=>c.id==='terminal'),false);assert.equal(A.applicable({mode:'tank'}).some(c=>c.id==='terminal'),true);
+assert.ok(A.assess(full,{}).open>0);assert.equal(A.assess(full,Object.fromEntries(A.checks.map(c=>[c.id,'na']))).permission,'NIET BEOORDEELD');
+console.log('11 checks passed: no automatic approval, missing inputs, dates, contradictions, quantities, mode-specific checks.');
