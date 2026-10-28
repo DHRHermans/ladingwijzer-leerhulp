@@ -4,7 +4,7 @@ Open `index.html#diepgang` via een statische server. GitHub Pages blijft `main` 
 
 ## Brongegevens
 
-`meetbrief.pdf` is de door de gebruiker aangeleverde PDF. Pagina 1 bevat 252 opeenvolgende tabelrijen (cm, m³), opgeslagen in `meetbrief-data.js` met SHA-256 van de PDF. Extractie: `pdftotext -raw docs/meetbrief.pdf`; alleen paren op dezelfde regel van pagina 1 zijn overgenomen. De waarden zijn strikt stijgend; er ontbreken geen centimeters. De oefening op pagina 2 is intern tegenstrijdig en niet als rekenreferentie gebruikt.
+`meetbrief.pdf` is de door de gebruiker aangeleverde PDF. Pagina 1 bevat 252 opeenvolgende tabelrijen (cm, m³), opgeslagen in `meetbrief-data.js` met SHA-256 van de PDF. Extractie: `pdftotext -raw docs/meetbrief.pdf`; alleen paren op dezelfde regel van pagina 1 zijn overgenomen. De waarden zijn strikt stijgend; er ontbreken geen centimeters. Het niet-benodigde oefenblad (oorspronkelijke pagina 2) is op verzoek verwijderd; de gepubliceerde PDF bevat alleen de tabel. De SHA-256 van zowel de huidige PDF als de oorspronkelijke upload staat in de dataset.
 
 ## Model
 
@@ -22,3 +22,11 @@ Voorbeelden: methanol 790, benzine 740 en dieselolie 840 kg/m³ zijn afgeronde o
 - Browsercontrole: directe route, navigatie, waterkeuze, bewegende kiel, volumevergelijking, ondiep water, foutafhandeling, overname product en mobiele breedte van 390 px.
 
 UI: `draft.js`; herbruikbare rekenkern: `draft-engine.js`. Er zijn geen externe runtime-dependencies.
+
+## Leerhub en simulatorbediening
+
+De standaardroute is de leerhub (`#start`), met ingangen voor ADN (`#adn`), diepgang (`#diepgang`) en ladingstechniek (`#ladingstechniek`). De productzoeker blijft via de ADN-ingang bereikbaar.
+
+De simulator biedt schuiven voor hoeveelheid, waterdichtheid en waterdiepte, een afspeelbare overgang van zoet naar zee en een bewaarfunctie voor een vergelijkingskiel. De detailweergave vergroot het verschil tegenover zoetwater (8 pixels/cm, visueel begrensd; de cijfers zijn ongewijzigd). Een bewaarde vergelijking leeft alleen in de huidige browsersessie. De grafische laadblokken zijn schematisch en stellen geen tankplan voor.
+
+De scheepsweergave heeft een vaste verticale schaal (60 pixels per modelmeter). Het aanpassen van de waterdiepte verplaatst alleen de bodem, niet het schip. Bij grote waterdiepte ligt de bodem buiten beeld en wordt dit gemeld.
